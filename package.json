@@ -1,0 +1,19 @@
+{
+  "name": "hexlet-code",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "backend": "make run",
+    "frontend": "start-hexlet-devops-deploy-crud-frontend",
+    "dev": "concurrently --kill-others --names backend,frontend --prefix-colors blue,magenta \"npm run backend\" \"npm run frontend\""
+  },
+  "dependencies": {
+    "@hexlet/project-devops-deploy-crud-frontend": "1.0.4"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.4"
+  }
+}
