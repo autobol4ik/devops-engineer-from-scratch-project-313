@@ -1,8 +1,6 @@
 import pytest
-from sqlmodel import Session, select
 
 from main import create_app
-from models import Link
 
 
 @pytest.fixture
@@ -209,10 +207,8 @@ def test_duplicate_name_has_same_error_for_create_and_update(client):
 
 def test_created_at_is_set_by_database_and_not_exposed(app, client):
     response = create_link(client)
-    engine = app.extensions["db_engine"]
-
-    with Session(engine) as session:
-        link = session.exec(select(Link)).one()
+    link_id = response.get_json()["id"]
+    link = app.extensions["link_repository"].get_link(link_id)
 
     assert link.created_at is not None
     assert "created_at" not in response.get_json()
@@ -286,6 +282,13 @@ def test_forwarded_headers_are_used_for_short_url():
 
 def test_missing_short_link_returns_json_404(client):
     response = client.get("/r/missing")
+
+    assert response.status_code == 404
+    assert response.get_json() == {"detail": "Not found"}
+
+
+def test_unknown_route_returns_json_404(client):
+    response = client.get("/missing")
 
     assert response.status_code == 404
     assert response.get_json() == {"detail": "Not found"}

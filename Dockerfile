@@ -34,7 +34,7 @@ RUN nginx -t
 
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
 COPY --from=frontend --chown=app:app /frontend/public /app/public
-COPY --chown=app:app main.py database.py models.py ./
+COPY --chown=app:app main.py api.py database.py link_repository.py models.py ./
 COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/start-app
 
 EXPOSE 80
