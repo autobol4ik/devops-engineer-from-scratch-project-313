@@ -23,13 +23,14 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends gosu nginx \
+    && apt-get upgrade --yes \
+    && apt-get install --yes --no-install-recommends nginx \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 app
 
 WORKDIR /app
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --chown=app:app nginx.conf /etc/nginx/nginx.conf
 RUN nginx -t
 
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
@@ -37,6 +38,11 @@ COPY --from=frontend --chown=app:app /frontend/public /app/public
 COPY --chown=app:app main.py api.py database.py link_repository.py models.py ./
 COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/start-app
 
-EXPOSE 80
+USER app:app
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/ping', timeout=2).read()"]
 
 CMD ["start-app"]

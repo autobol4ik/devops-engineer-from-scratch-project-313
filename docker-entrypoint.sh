@@ -15,8 +15,21 @@ terminate() {
 
 trap terminate INT TERM
 
-gosu app gunicorn --workers 1 --bind 127.0.0.1:8080 main:app &
+gunicorn --workers 1 --no-control-socket --bind 127.0.0.1:8081 main:app &
 backend_pid=$!
+
+attempt=0
+until python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/ping', timeout=1)" >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if ! kill -0 "$backend_pid" 2>/dev/null || [ "$attempt" -ge 30 ]; then
+        echo "Backend failed to become ready" >&2
+        terminate
+        wait "$backend_pid" 2>/dev/null || true
+        exit 1
+    fi
+    sleep 1
+done
+
 nginx -g "daemon off;" &
 nginx_pid=$!
 
